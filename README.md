@@ -1,68 +1,14 @@
 # MentorMD: An AI Attending Physician
 
-MentorMD is an AI attending physician platform for clinical case-presentation training.
+MentorMD is an AI attending physician that helps medical students practice clinical reasoning by analyzing case presentations, evaluating diagnostic thinking, and guiding learners with targeted Socratic feedback.
 
-It takes a student's presentation, evaluates it against a 9-metric rubric, asks targeted Socratic follow-up questions, and tracks improvement across turns while storing user progress in Firebase.
+### Team Members
+- Katie Xiao: Full-Stack Development (Backend, Firebase, Frontend)
+- Parvi Chadha: AI Agent Design & Prompt Engineering
+- Abigail Joseph: Frontend Development & System Integration
+- Caleb Kim: Bayesian Network & Backend Prompt Engineering
 
-## Live Demo
-
-Deployed website: https://abigailjoseph.github.io/Kaggle-MedGemma/
-
-## Tech Stack
-
-### Frontend
-- React + TypeScript + Vite
-- Firebase Auth (Google sign-in)
-- Cloud Firestore (profiles, completed cases, stats)
-
-### Backend
-- Python 3.10+
-- FastAPI + Uvicorn
-- OpenAI API (student parser, rubric evaluator, AI attending)
-- Google Vertex AI endpoint (MedGemma prompt packet)
-- Firebase Admin SDK (ID token verification)
-- Custom Noisy-OR Bayes network for differential reasoning
-
-## Quick Start (Local Development)
-
-Create `backend/.env` and `frontend/.env`, then run in two terminals:
-
-### Environment Variables
-
-Backend (`backend/.env`)
-- `OPENAI_API_KEY`
-- `OPENAI_MODEL`
-- `MEDGEMMA_PROJECT_ID`
-- `MEDGEMMA_ENDPOINT_ID`
-- `FIREBASE_SERVICE_ACCOUNT_KEY`
-- `GOOGLE_APPLICATION_CREDENTIALS` (optional, depends on GCP auth setup)
-- `ALLOWED_ORIGINS`
-
-Frontend (`frontend/.env`)
-- `VITE_API_BASE_URL`
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_STORAGE_BUCKET`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
-- `VITE_FIREBASE_MEASUREMENT_ID`
-
-### 1. Run Backend
-
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn server:app --reload --port 8000
-```
-
-### 2. Run Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
+---
 
 ## What The System Does
 
@@ -74,19 +20,62 @@ npm run dev
 - Produces attending-style coaching plus one targeted question per turn.
 - Stores case outcomes, transcript, and profile stats for longitudinal learning.
 
+---
+
+## Quick Start (Local Development)
+
+### 1. Configure environment variables
+
+### Environment Variables
+
+Backend `backend/.env`
+```env
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=your_openai_model
+MEDGEMMA_PROJECT_ID=your_medgemma_project_id
+MEDGEMMA_ENDPOINT_ID=your_medgemma_endpoint_id
+FIREBASE_SERVICE_ACCOUNT_KEY=your_firebase_service_account_key
+ALLOWED_ORIGINS=your_allowed_origins 
+```
+
+Frontend (`frontend/.env`)
+```env
+VITE_FIREBASE_API_KEY=your_firebase_web_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=1234567890
+VITE_FIREBASE_APP_ID=1:1234567890:web:abcdef1234567890
+VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+### 2. Run backend 
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn server:app --reload --port 8000
+```
+
+### 3. Run frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+---
+
+
 ## Repository Structure 
 
 ```text
-.
-|-- README.md                                 
-|-- render.yaml                               
-|-- medgemma_client.py                        # Legacy standalone MedGemma test client script
-|-- docs/
-|   |-- system-diagram.png                    # High-level system diagram image
+MentorMD/
 |-- backend/
 |   |-- main.py                               # CLI entrypoint for local tutoring session
-|   |-- server.py                             # FastAPI API (start session, message, finalize)
-|   |-- requirements.txt                      # Python dependencies
+|   |-- server.py                             # FastAPI API 
 |   |-- medgemma_client.py                    # Backend MedGemma Vertex endpoint wrapper
 |   |-- agents/
 |   |   `-- ai_attending.py                   # Attending-style coaching response generator
@@ -100,25 +89,12 @@ npm run dev
 |   |   `-- diagnosis_evaluator.py            # Checks diagnosis support against Bayes outputs
 |   `-- bayes/
 |       |-- noisy_or_bayesnet.py              # Noisy-OR Bayesian inference engine
-|       |-- network_data.py                   # Disease/symptom priors and conditional probabilities
-|       |-- demo.py                           # Bayes demo script
-|       `-- data/sample_ehr.json              # Sample data for experimentation
+|       `-- network_data.py            
 `-- frontend/
-    |-- README.md                             # Frontend-specific setup details
-    |-- package.json                          # Node scripts/dependencies
-    |-- vite.config.ts                        # Vite build/dev config
-    |-- index.html                            # Frontend HTML entry
-    `-- src/
-        |-- main.tsx                          # React mount point
-        |-- lib/firebase.ts                   # Firebase client initialization
-        |-- app/App.tsx                       # App shell, screen flow, auth + Firestore orchestration
-        |-- app/components/HomePage.tsx       # Landing page
-        |-- app/components/CaseScreen.tsx     # Initial case presentation input
-        |-- app/components/ChatScreen.tsx     # Interactive tutoring chat UI
-        |-- app/components/EvaluationPage.tsx # Final feedback/results page
-        |-- app/components/ProfilePage.tsx    # User profile, history, progress dashboard
-        `-- app/components/ui/*               # Reusable UI primitives (presentational components)
+    `-- src/         
 ```
+
+---
 
 ## System Diagram
 
@@ -134,3 +110,37 @@ npm run dev
 6. Evaluation workflow grades the presentation across 9 metrics and identifies gaps.
 7. AI attending returns concise coaching and one targeted Socratic question.
 8. Final case performance and transcript are persisted in Firestore and shown in profile analytics.
+
+---
+
+## Technical Details 
+
+### Tech Stack
+
+Frontend:
+- React
+- TypeScript
+- Vite
+- Firebase Authentication
+- Cloud Firestore
+
+Backend:
+- Python
+- FastAPI
+- OpenAI API
+- Google Vertex AI endpoint (MedGemma)
+- Firebase Admin SDK
+- Custom Noisy-OR Bayesian network
+
+### Evaluation Rubric 
+
+MentorMD evaluates case presentations across:
+1. Focused relevant information selection
+2. Clear working diagnosis statement
+3. Logical organization and reasoning
+4. Prioritized differential diagnosis
+5. Conciseness and efficient delivery
+6. Rational diagnostic workup prioritization
+7. Management plan and disposition prioritization
+8. Hypothesis-driven inquiry
+9. Ability to synthesize findings
