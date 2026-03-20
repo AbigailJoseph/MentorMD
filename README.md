@@ -2,8 +2,6 @@
 
 MentorMD is an AI attending physician that helps medical students practice clinical reasoning by analyzing case presentations, evaluating diagnostic thinking, and guiding learners with targeted Socratic feedback.
 
-### Live Demo: TODO
-
 ### Team Members
 - Katie Xiao: Full-Stack Development (Backend, Firebase, Frontend)
 - Parvi Chadha: AI Agent Design & Prompt Engineering
