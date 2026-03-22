@@ -38,8 +38,8 @@ jobs:
         env:
           # Render backend URL — set this secret in GitHub → Settings → Secrets
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-          # GitHub Pages serves from /Kaggle-MedGemma/
-          VITE_BASE_PATH: /Kaggle-MedGemma/
+          # GitHub Pages serves from /MentorMD/
+          VITE_BASE_PATH: /MentorMD/
           # Firebase config — set these as GitHub Actions secrets
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
