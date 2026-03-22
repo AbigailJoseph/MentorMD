@@ -2,6 +2,7 @@
 
 from typing import Dict, Any, List, Tuple
 from pathlib import Path
+from dataclasses import asdict
 
 from dotenv import load_dotenv
 ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
@@ -84,7 +85,7 @@ def build_bayes_summary(
 def build_medgemma_prompt(bayes_summary: Dict[str, Any]) -> str:
     """Create the grounded MedGemma prompt using case narrative and Bayes outputs."""
     return f"""
-You are MedGemma. Create a concise, structured teaching brief using ONLY the provided information.
+Create a concise, structured teaching brief using ONLY the provided information.
 Do NOT invent patient facts. If something is missing, say it is missing.
 
 CASE_NARRATIVE (fixed case background context for this scenario):
@@ -208,3 +209,39 @@ class ClinicalTutoringPipeline:
             f"Total turns: {summary.get('turns')}\n"
             f"Turns to meet all metrics: {summary.get('turns_to_meet_all_metrics')}\n"
         )
+
+    def to_snapshot(self) -> Dict[str, Any]:
+        """Return a JSON-serializable snapshot for durable session persistence."""
+        return {
+            "conversation_state": asdict(self.state),
+            "presentation_workflow_state": self.presentation_workflow.export_state(),
+            "attending_history": self.attending.export_history(),
+        }
+
+    @classmethod
+    def from_snapshot(cls, snapshot: Dict[str, Any]) -> "ClinicalTutoringPipeline":
+        """Rebuild a pipeline instance from a serialized snapshot."""
+        pipeline = cls()
+
+        state_data = snapshot.get("conversation_state", {}) or {}
+        pipeline.state.turn_number = int(state_data.get("turn_number", 0))
+        pipeline.state.symptoms_identified = list(state_data.get("symptoms_identified", []) or [])
+        pipeline.state.symptoms_absent = list(state_data.get("symptoms_absent", []) or [])
+        pipeline.state.student_diagnoses = list(state_data.get("student_diagnoses", []) or [])
+        pipeline.state.bayes_summary = dict(state_data.get("bayes_summary", {}) or {})
+        pipeline.state.medgemma_packet = str(state_data.get("medgemma_packet", ""))
+        pipeline.state.eval_packet = dict(state_data.get("eval_packet", {}) or {})
+        pipeline.state.turns_to_meet_all_metrics = state_data.get("turns_to_meet_all_metrics")
+        pipeline.state.reasoning_progress = dict(state_data.get("reasoning_progress", {}) or {})
+
+        evidence = {s: True for s in pipeline.state.symptoms_identified}
+        evidence.update({s: False for s in pipeline.state.symptoms_absent})
+        if evidence:
+            pipeline.bayes_net.set_evidence(evidence)
+
+        pipeline.presentation_workflow.import_state(
+            snapshot.get("presentation_workflow_state", {}) or {}
+        )
+        pipeline.attending.import_history(snapshot.get("attending_history", []) or [])
+
+        return pipeline

@@ -3,7 +3,7 @@
 import json
 import os
 from pathlib import Path
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 
@@ -103,6 +103,22 @@ class PresentationWorkflow:
     def reset(self):
         """Clear workflow state for a new presentation session."""
         self.state = EvalState()
+
+    def export_state(self) -> Dict[str, Any]:
+        """Return a JSON-serializable snapshot of workflow state."""
+        return asdict(self.state)
+
+    def import_state(self, state_data: Dict[str, Any]) -> None:
+        """Restore workflow state from a serialized snapshot."""
+        self.state = EvalState(
+            interaction_count=int(state_data.get("interaction_count", 0)),
+            max_interactions=int(state_data.get("max_interactions", 15)),
+            initial_presentation=state_data.get("initial_presentation", ""),
+            metrics_status=state_data.get("metrics_status", {}) or {},
+            conversation_history=state_data.get("conversation_history", []) or [],
+            initial_evaluation=state_data.get("initial_evaluation"),
+            all_metrics_met_turn=state_data.get("all_metrics_met_turn"),
+        )
 
     def evaluate_initial(
         self,

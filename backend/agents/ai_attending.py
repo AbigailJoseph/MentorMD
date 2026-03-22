@@ -95,3 +95,11 @@ STUDENT_STATE:
         self._history.append({"role": "user", "content": user_message})
         self._history.append({"role": "assistant", "content": reply})
         return reply
+
+    def export_history(self) -> List[Dict[str, str]]:
+        """Return a JSON-serializable copy of conversation history."""
+        return [dict(item) for item in self._history]
+
+    def import_history(self, history: List[Dict[str, str]]) -> None:
+        """Restore conversation history from serialized data."""
+        self._history = [dict(item) for item in history if isinstance(item, dict)]

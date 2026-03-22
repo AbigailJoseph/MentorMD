@@ -10,35 +10,19 @@ MentorMD is an AI attending physician that helps medical students practice clini
 
 ---
 
-## What The System Does
-
-- Accepts a student's initial case presentation.
-- Extracts likely symptoms/diagnoses from free text.
-- Uses a Noisy-OR Bayes network to ground the differential.
-- Generates a MedGemma knowledge packet from grounded context.
-- Evaluates presentation quality across 9 clinical communication/reasoning metrics.
-- Produces attending-style coaching plus one targeted question per turn.
-- Stores case outcomes, transcript, and profile stats for longitudinal learning.
-
----
-
 ## Quick Start (Local Development)
 
 ### 1. Configure environment variables
 
-### Environment Variables
+`backend/.env`
 
-Backend `backend/.env`
 ```env
 OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=your_openai_model
-MEDGEMMA_PROJECT_ID=your_medgemma_project_id
-MEDGEMMA_ENDPOINT_ID=your_medgemma_endpoint_id
 FIREBASE_SERVICE_ACCOUNT_KEY=your_firebase_service_account_key
-ALLOWED_ORIGINS=your_allowed_origins 
 ```
 
-Frontend (`frontend/.env`)
+`frontend/.env`
+
 ```env
 VITE_FIREBASE_API_KEY=your_firebase_web_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
@@ -49,6 +33,8 @@ VITE_FIREBASE_APP_ID=1:1234567890:web:abcdef1234567890
 VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 VITE_API_BASE_URL=http://localhost:8000
 ```
+
+Corresponding example env files can be found in `backend/.env.example` and `frontend/.env.example`.
 
 ### 2. Run backend 
 
@@ -68,48 +54,59 @@ npm run dev
 
 ---
 
-
-## Repository Structure 
-
+## Project Structure
 ```text
-MentorMD/
+Kaggle-MedGemma/
 |-- backend/
-|   |-- main.py                               # CLI entrypoint for local tutoring session
-|   |-- server.py                             # FastAPI API 
-|   |-- medgemma_client.py                    # Backend MedGemma Vertex endpoint wrapper
+|   |-- server.py                         # FastAPI server entrypoint + session API
+|   |-- main.py                           # Local CLI tutoring entrypoint
+|   |-- medgemma_client.py                # OpenAI-backed teaching brief helper
 |   |-- agents/
-|   |   `-- ai_attending.py                   # Attending-style coaching response generator
-|   |-- parsing/
-|   |   `-- student_parser.py                 # Extracts symptoms/differential from student text
-|   |-- pipeline/
-|   |   |-- pipeline.py                       # Main orchestration: parse -> infer -> evaluate -> respond
-|   |   `-- state.py                          # Conversation state dataclass across turns
+|   |   `-- ai_attending.py               # Attending response agent
+|   |-- bayes/
+|   |   |-- noisy_or_bayesnet.py          # Noisy-OR Bayesian inference engine
+|   |   |-- network_data.py               # Disease/symptom network definitions
+|   |   |-- demo.py
+|   |   `-- data/
 |   |-- evaluation/
-|   |   |-- presentation_workflow.py          # 9-metric rubric evaluation + Socratic question loop
-|   |   `-- diagnosis_evaluator.py            # Checks diagnosis support against Bayes outputs
-|   `-- bayes/
-|       |-- noisy_or_bayesnet.py              # Noisy-OR Bayesian inference engine
-|       `-- network_data.py            
-`-- frontend/
-    `-- src/         
+|   |   |-- presentation_workflow.py      # 9-metric rubric evaluation + question generation
+|   |   `-- diagnosis_evaluator.py        # Differential support checks
+|   |-- parsing/
+|   |   `-- student_parser.py             # Free-text to structured clinical features
+|   `-- pipeline/
+|       |-- pipeline.py                   # Main orchestration: parse -> infer -> evaluate -> respond
+|       `-- state.py                      # Conversation state model
+|-- frontend/
+|   `-- src/
+|       |-- main.tsx                      # React entrypoint
+|       |-- lib/
+|       |   `-- firebase.ts               # Firebase client initialization
+|       `-- app/
+|           |-- App.tsx                   
+|           `-- components/
+|-- docs/
+|   `-- system-diagram.png
+`-- README.md
 ```
 
 ---
 
 ## System Diagram
+![System Diagram](docs/system-diagram.png)
 
-![MentorMD System Diagram](docs/system-diagram.png)
+### Frontend 
+The frontend, provides an interactive tutoring interface where students present cases and receive attending-style feedback. **Firebase Authentication** handles secure login via Google, and **Cloud Firestore** stores completed cases and the learner’s progress over time. The platform also includes **streaks, achievements, and other progress metrics** to incentivize consistent practice and directly track the student’s improvement in their clinical reasoning skills. 
 
-## High-Level Flow
+### Backend
+The backend runs a stateful clinical reasoning pipeline for each tutoring session.
 
-1. User signs in on the frontend via Firebase Auth.
-2. Frontend sends authenticated requests to backend session endpoints.
-3. Backend parses student input into structured symptoms and diagnoses.
-4. Bayes engine computes grounded differential probabilities.
-5. Backend builds a MedGemma prompt packet using case context and Bayes summary.
-6. Evaluation workflow grades the presentation across 9 metrics and identifies gaps.
-7. AI attending returns concise coaching and one targeted Socratic question.
-8. Final case performance and transcript are persisted in Firestore and shown in profile analytics.
+When a student submits a case presentation, the backend works as follows:
+1. An OpenAI model converts the student’s narrative into a **structured representation**, extracting normalized symptoms, absent findings, and proposed diagnoses aligned to a clinical ontology.
+2. These observations update a **Noisy-OR Bayesian network**, which computes posterior probabilities across candidate pulmonary diseases and produces a ranked differential diagnosis. 
+3. The student’s presentation is graded across **nine clinical reasoning competencies** allowing the system to identify missing or incomplete reasoning steps. 
+4. An AI attending agent (also powered by an OpenAI model), generates concise coaching and asks **one Socratic follow-up question** that targets the student’s weakest reasoning area. 
+
+Each interaction updates the tutoring pipeline state, which is serialized and stored in a backend **SQLite session database** to allow conversations to resume deterministically. 
 
 ---
 
@@ -128,9 +125,8 @@ Backend:
 - Python
 - FastAPI
 - OpenAI API
-- Google Vertex AI endpoint (MedGemma)
-- Firebase Admin SDK
-- Custom Noisy-OR Bayesian network
+- SQLite
+- Noisy-OR Bayesian Networks
 
 ### Evaluation Rubric 
 

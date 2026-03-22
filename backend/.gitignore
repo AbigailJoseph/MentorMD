@@ -5,3 +5,4 @@ venv/
 *.pyc
 firebase-service-account.json
 gcp-key.json
+sessions.db
